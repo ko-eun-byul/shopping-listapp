@@ -1,0 +1,359 @@
+<!-- Created: 2026-06-29 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>쇼핑리스트</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      width: 100%;
+      max-width: 480px;
+      padding: 32px 28px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 span { font-size: 1.6rem; }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .input-row input {
+      flex: 1;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      color: #2d3748;
+    }
+
+    .input-row input:focus { border-color: #667eea; }
+
+    .input-row input::placeholder { color: #a0aec0; }
+
+    .btn-add {
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-add:hover { background: #5a67d8; }
+    .btn-add:active { transform: scale(0.97); }
+    .btn-add:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .stats {
+      font-size: 0.82rem;
+      color: #718096;
+      margin-bottom: 14px;
+    }
+
+    .stats strong { color: #4a5568; }
+
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    li.checked {
+      background: #edf7ed;
+      border-color: #c6f6d5;
+      opacity: 0.7;
+    }
+
+    li input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #48bb78;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .item-name {
+      flex: 1;
+      font-size: 0.95rem;
+      color: #2d3748;
+      word-break: break-all;
+      transition: color 0.2s;
+    }
+
+    li.checked .item-name {
+      text-decoration: line-through;
+      color: #a0aec0;
+    }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #cbd5e0;
+      font-size: 1.1rem;
+      padding: 2px 4px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-delete:hover { color: #e53e3e; background: #fff5f5; }
+
+    .empty {
+      text-align: center;
+      color: #a0aec0;
+      font-size: 0.9rem;
+      padding: 32px 0;
+    }
+
+    .btn-clear {
+      margin-top: 20px;
+      width: 100%;
+      background: none;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 9px;
+      color: #a0aec0;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .btn-clear:hover { color: #e53e3e; border-color: #fed7d7; }
+
+    .loading {
+      text-align: center;
+      color: #a0aec0;
+      font-size: 0.9rem;
+      padding: 32px 0;
+    }
+
+    .error-msg {
+      text-align: center;
+      color: #e53e3e;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1><span>🛒</span> 쇼핑리스트</h1>
+
+    <div class="input-row">
+      <label for="itemInput" class="hidden">아이템 이름</label>
+      <input id="itemInput" type="text" placeholder="아이템을 입력하세요" maxlength="60" aria-label="아이템 이름" />
+      <button class="btn-add" id="btnAdd">추가</button>
+    </div>
+
+    <p class="error-msg hidden" id="errorMsg"></p>
+    <div class="stats" id="stats"></div>
+    <p class="loading" id="loading">불러오는 중...</p>
+    <ul id="list"></ul>
+    <p class="empty hidden" id="empty">아직 아이템이 없어요. 위에서 추가해보세요!</p>
+
+    <button class="btn-clear hidden" id="clearBtn">
+      완료된 항목 삭제
+    </button>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://zkmdquirvypcjnhapdoi.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprbWRxdWlydnlwY2puaGFwZG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MDYzMzEsImV4cCI6MjA5ODI4MjMzMX0.kO1KEJo-xoxrESgNhAIX0EcTHYNParWaHZ5wVnk-bwE';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let items = [];
+
+    const listEl    = document.getElementById('list');
+    const emptyEl   = document.getElementById('empty');
+    const statsEl   = document.getElementById('stats');
+    const clearBtn  = document.getElementById('clearBtn');
+    const loadingEl = document.getElementById('loading');
+    const errorEl   = document.getElementById('errorMsg');
+    const btnAdd    = document.getElementById('btnAdd');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.remove('hidden');
+      setTimeout(() => errorEl.classList.add('hidden'), 4000);
+    }
+
+    function render() {
+      loadingEl.classList.add('hidden');
+      listEl.innerHTML = '';
+
+      if (items.length === 0) {
+        emptyEl.classList.remove('hidden');
+        statsEl.textContent = '';
+        clearBtn.classList.add('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      const checkedCount = items.filter(i => i.checked).length;
+      statsEl.innerHTML = `총 <strong>${items.length}</strong>개 · 완료 <strong>${checkedCount}</strong>개`;
+      clearBtn.classList.toggle('hidden', checkedCount === 0);
+
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        if (item.checked) li.classList.add('checked');
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = item.checked;
+        cb.setAttribute('aria-label', `${item.name} 완료 여부`);
+        cb.addEventListener('change', () => toggleItem(item.id));
+
+        const span = document.createElement('span');
+        span.className = 'item-name';
+        span.textContent = item.name;
+
+        const del = document.createElement('button');
+        del.className = 'btn-delete';
+        del.title = '삭제';
+        del.setAttribute('aria-label', `${item.name} 삭제`);
+        del.textContent = '✕';
+        del.addEventListener('click', () => deleteItem(item.id));
+
+        li.appendChild(cb);
+        li.appendChild(span);
+        li.appendChild(del);
+        listEl.appendChild(li);
+      });
+    }
+
+    async function loadItems() {
+      const { data, error } = await supabase
+        .from('shopping_items')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        showError('데이터를 불러오지 못했습니다.');
+        loadingEl.classList.add('hidden');
+        return;
+      }
+      items = data;
+      render();
+    }
+
+    async function addItem() {
+      const input = document.getElementById('itemInput');
+      const name = input.value.trim();
+      if (!name) { input.focus(); return; }
+
+      btnAdd.disabled = true;
+      const { data, error } = await supabase
+        .from('shopping_items')
+        .insert({ name })
+        .select()
+        .single();
+      btnAdd.disabled = false;
+
+      if (error) { showError('추가에 실패했습니다.'); return; }
+
+      items.push(data);
+      render();
+      input.value = '';
+      input.focus();
+    }
+
+    async function toggleItem(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      const { error } = await supabase
+        .from('shopping_items')
+        .update({ checked: !item.checked })
+        .eq('id', id);
+
+      if (error) { showError('업데이트에 실패했습니다.'); return; }
+
+      item.checked = !item.checked;
+      render();
+    }
+
+    async function deleteItem(id) {
+      const { error } = await supabase
+        .from('shopping_items')
+        .delete()
+        .eq('id', id);
+
+      if (error) { showError('삭제에 실패했습니다.'); return; }
+
+      items = items.filter(i => i.id !== id);
+      render();
+    }
+
+    async function clearChecked() {
+      const { error } = await supabase
+        .from('shopping_items')
+        .delete()
+        .eq('checked', true);
+
+      if (error) { showError('삭제에 실패했습니다.'); return; }
+
+      items = items.filter(i => !i.checked);
+      render();
+    }
+
+    btnAdd.addEventListener('click', addItem);
+    document.getElementById('itemInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addItem();
+    });
+    clearBtn.addEventListener('click', clearChecked);
+
+    loadItems();
+  </script>
+</body>
+</html>
